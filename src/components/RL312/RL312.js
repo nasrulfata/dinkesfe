@@ -1,14 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from 'axios'
 import jwt_decode from 'jwt-decode'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate} from 'react-router-dom'
 import style from './FormTambahRL312.module.css'
 import { HiSaveAs } from 'react-icons/hi'
-import { RiDeleteBin5Fill, RiEdit2Fill } from 'react-icons/ri'
-import { AiFillFileAdd } from 'react-icons/ai'
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css'
-import { confirmAlert } from 'react-confirm-alert'
 import 'react-confirm-alert/src/react-confirm-alert.css'
 import Table from 'react-bootstrap/Table';
 import Spinner from "react-bootstrap/esm/Spinner";
@@ -17,11 +14,8 @@ import Select from 'react-select'
 
 export const RL312 = () => {
   const [tahun, setTahun] = useState('2022')
+  const [namaTahun, setNamaTahun] = useState(new Date().getFullYear() - 1);
   const [namaRS, setNamaRS] = useState('')
-  const [alamatRS, setAlamatRS] = useState('')
-  const [namaPropinsi, setNamaPropinsi] = useState('')
-  const [namaKabKota, setNamaKabKota] = useState('')
-    // const [nama, setNama] = useState('')
     const [token, setToken] = useState('')
     const [expire, setExpire] = useState('')
     const [dataRL, setDataRL] = useState([]);
@@ -34,12 +28,16 @@ export const RL312 = () => {
     const tableRef = useRef(null);
     const [namafile, setNamaFile] = useState("");
     const [namakabkota, setKabKota] = useState("");
+    const [namakabkotaView, setKabKotaView] = useState("");
     const [statusValidasi, setStatusValidasi] = useState({ value: 3, label: 'Belum divalidasi' })
     const [statusValidasiId, setStatusValidasiId] = useState(3)
     const [optionStatusValidasi, setOptionStatusValidasi] = useState([])
-    const [catatan, setCatatan] = useState("")
+    const [catatan, setCatatan] = useState(" ")
     const [buttonStatus, setButtonStatus] = useState(true)
     const [statusDataValidasi, setStatusDataValidasi] = useState()
+    const [validateAccess, setValidateAccess] = useState(true)
+    const [validateVisibility, setValidateVisibility] = useState("none")
+    const [kategoriUser, setKategoriUser] = useState(3)
 
     
 
@@ -52,273 +50,298 @@ export const RL312 = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const refreshToken = async () => {
-        try {
-          const response = await axios.get("/apisirsadmin/token");
+    const refreshToken = async() => {
+      try {
+        const response = await axios.get("/apisirs/token");
+        setToken(response.data.accessToken);
+        const decoded = jwt_decode(response.data.accessToken);
+        setExpire(decoded.exp);
+        setKategoriUser(decoded.jenis_user_id);
+      } catch (error) {
+        if (error.response) {
+          navigate("/");
+        }
+      }
+    };
+
+
+    const axiosJWT = axios.create();
+    axiosJWT.interceptors.request.use(
+      async (config) => {
+        const currentDate = new Date();
+        if (expire * 1000 < currentDate.getTime()) {
+          const response = await axios.get("/apisirs/token");
+          config.headers.Authorization = `Bearer ${response.data.accessToken}`;
           setToken(response.data.accessToken);
           const decoded = jwt_decode(response.data.accessToken);
           setExpire(decoded.exp);
-          // getDataRS(decoded.rsId);
-        } catch (error) {
-          if (error.response) {
-            navigate("/");
-          }
         }
-      };
-    
-      const axiosJWT = axios.create();
-      axiosJWT.interceptors.request.use(
-        async (config) => {
-          const currentDate = new Date();
-          if (expire * 1000 < currentDate.getTime()) {
-            const response = await axios.get("/apisirsadmin/token");
-            config.headers.Authorization = `Bearer ${response.data.accessToken}`;
-            setToken(response.data.accessToken);
-            const decoded = jwt_decode(response.data.accessToken);
-            setExpire(decoded.exp);
+        return config;
+      },
+      (error) => {
+        return Promise.reject(error);
+      }
+    );
+    const getDataKabkota = async () => {
+      try {
+      const response = await axiosJWT.get("/apisirs/kabkota");
+      const kabkotaDetails = response.data.data.map((value) => {
+          return value;
+      });
+
+      const results = [];
+      kabkotaDetails.forEach((value) => {
+          results.push({
+          key: value.nama,
+          value: value.id,
+          });
+      });
+      // Update the options state
+      setOptions([{ key: "Piih Kab/Kota", value: "" }, ...results]);
+      } catch (error) {
+      if (error.response) {
+          navigate("/");
+      }
+      }
+  };
+
+  const getStatusValidasi = async () => {
+      try {
+          const response = await axios.get("/apisirs/statusvalidasi")
+          const statusValidasiTemplate = response.data.data.map((value, index) => {
+              return {
+                  value: value.id,
+                  label: value.nama
+              }
+          })
+          setOptionStatusValidasi(statusValidasiTemplate)
+          
+      } catch (error) {
+          console.log(error)
+      }
+      // setStatusValidasi(3)
+  }
+
+  const searchRS = async (e) => {
+      try {
+      const responseRS = await axiosJWT.get(
+          "/apisirs/rumahsakit?kabkotaid=" + e.target.value,
+          {
+          headers: {
+              Authorization: `Bearer ${token}`,
+          },
           }
-          return config;
-        },
-        (error) => {
-          return Promise.reject(error);
-        }
       );
-    
-      const getDataKabkota = async () => {
-        try {
-          const response = await axiosJWT.get("/apisirsadmin/kabkota");
-          const kabkotaDetails = response.data.data.map((value) => {
-            return value;
+      const DetailRS = responseRS.data.data.map((value) => {
+          return value;
+      });
+      const resultsRS = [];
+
+      DetailRS.forEach((value) => {
+          resultsRS.push({
+          key: value.RUMAH_SAKIT,
+          value: value.Propinsi,
           });
-    
-          const results = [];
-          kabkotaDetails.forEach((value) => {
-            results.push({
-              key: value.nama,
-              value: value.id,
-            });
-          });
-          // Update the options state
-          setOptions([{ key: "Piih Kab/Kota", value: "" }, ...results]);
-        } catch (error) {
-          if (error.response) {
-            navigate("/");
+      });
+      // // Update the options state
+      setIdKabKota(e.target.value);
+      setOptionsRS([...resultsRS]);
+      setKabKota(e.target.options[e.target.selectedIndex].text);
+      } catch (error) {
+      if (error.response) {
+          console.log(error);
+      }
+      }
+  };
+
+  const changeHandlerSingle = (event) => {
+      setTahun(event.target.value);
+  };
+
+  const changeHandlerCatatan = (event) => {
+      setCatatan(event.target.value);
+  };
+
+  const changeHandlerRS = (event) => {
+      setIdRS(event.target.value);
+  }
+
+  const changeHandlerStatusValidasi = (selectedOption) => {
+      setStatusValidasiId(parseInt(selectedOption.value))
+      setStatusValidasi(selectedOption)
+      // console.log(statusValidasiId)
+  }
+
+  const changeNamaTahun = () => {
+      setNamaTahun(tahun)
+  }
+ 
+  const changeNamaKota = () => {
+    setKabKotaView(namakabkota)
+  }
+  const changeValidateAccess = () => {
+      console.log(kategoriUser)
+      if(kategoriUser === 2) {
+          setValidateAccess(true)
+          setValidateVisibility("none")
+      } else if(kategoriUser === 3) {
+          setValidateAccess(false)
+          setValidateVisibility("block")
+      }
+      console.log(validateAccess)
+  }
+
+  const Validasi = async (e) => {
+      e.preventDefault();
+      setSpinner(true);
+      let date = (tahun+'-01-01');
+
+      // getDataStatusValidasi()
+
+      if(statusValidasiId === 3){
+          alert('Silahkan pilih status validasi terlebih dahulu')
+          setSpinner(false)
+      } else {
+          if(statusValidasiId === 2 && catatan === ""){
+              alert('Silahkan isi catatan apabila laporan tidak valid')
+              setSpinner(false)
+          } else if (idrs === "") {
+              alert('Silahkan pilih rumah sakit')
+              setSpinner(false)
+          } else {
+              try {
+                  const customConfig = {
+                      headers: {
+                      "Content-Type": "application/json",
+                      Authorization: `Bearer ${token}`,
+                      },
+                      params: {
+                      rsid: idrs,
+                      rlid: 12,
+                      tahun: date,
+                      },
+                  };
+                  const results = await axiosJWT.get(
+                      "/apisirs/validasi",
+                      customConfig
+                  )
+      
+                  if(results.data.data == null){
+                      
+                  } else {
+                      setStatusDataValidasi(results.data.data.id)
+                  }
+              } catch (error) {
+                  console.log(error);
+              }
+
+              if(statusDataValidasi == null){
+                  try {
+                      const customConfig = {
+                          headers: {
+                              'Content-Type': 'application/json',
+                              'Authorization': `Bearer ${token}`
+                          }
+                      }
+                     await axiosJWT.post('/apisirs/validasi',{
+                          rsId: idrs,
+                          rlId: 12,
+                          tahun: date,
+                          statusValidasiId: statusValidasiId,
+                          catatan: catatan
+                      }, customConfig)
+                      // console.log(result.data)
+                      setSpinner(false)
+                      toast('Data Berhasil Disimpan', {
+                          position: toast.POSITION.TOP_RIGHT
+                      })
+                  } catch (error) {
+                      toast(`Data tidak bisa disimpan karena ,${error.response.data.message}`, {
+                          position: toast.POSITION.TOP_RIGHT
+                      })
+                      setSpinner(false)
+                  }
+              } else {
+                  try {
+                      const customConfig = {
+                                  headers: {
+                                      'Content-Type': 'application/json',
+                                      'Authorization': `Bearer ${token}`
+                                  }
+                              }
+                      await axiosJWT.patch('/apisirs/validasi/' + statusDataValidasi, {
+                          statusValidasiId: statusValidasiId,
+                          catatan: catatan
+                      }, customConfig);
+                      setSpinner(false)
+                      toast('Data Berhasil Diupdate', {
+                          position: toast.POSITION.TOP_RIGHT
+                      })
+                  } catch (error) {
+                      console.log(error)
+                      toast('Data Gagal Diupdate', {
+                          position: toast.POSITION.TOP_RIGHT
+                      })
+                      setButtonStatus(false)
+                      setSpinner(false)
+                  }
+              }
+
+              getDataStatusValidasi()
           }
-        }
-      };
-    
-      const getStatusValidasi = async () => {
-        try {
-            const response = await axios.get("/apisirsadmin/statusvalidasi")
-            const statusValidasiTemplate = response.data.data.map((value, index) => {
-                return {
-                    value: value.id,
-                    label: value.nama
-                }
-            })
-            setOptionStatusValidasi(statusValidasiTemplate)
-            
-        } catch (error) {
-            console.log(error)
-        }
-        // setStatusValidasi(3)
-    }
-  
-  
-    const searchRS = async (e) => {
-        try {
-        const responseRS = await axiosJWT.get(
-            "/apisirsadmin/rumahsakit/" + e.target.value,
-            {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-            }
-        );
-        const DetailRS = responseRS.data.data.map((value) => {
-            return value;
-        });
-        const resultsRS = [];
-  
-        DetailRS.forEach((value) => {
-            resultsRS.push({
-            key: value.RUMAH_SAKIT,
-            value: value.Propinsi,
-            });
-        });
-        // // Update the options state
-        setIdKabKota(e.target.value);
-        setOptionsRS([...resultsRS]);
-        setKabKota(e.target.options[e.target.selectedIndex].text);
-        } catch (error) {
-        if (error.response) {
-            console.log(error);
-        }
-        }
-    };
-  
-    const changeHandlerSingle = (event) => {
-        setTahun(event.target.value);
-    };
-  
-    const changeHandlerCatatan = (event) => {
-        setCatatan(event.target.value);
-    };
-  
-    const changeHandlerRS = (event) => {
-        setIdRS(event.target.value);
-    }
-  
-    const changeHandlerStatusValidasi = (selectedOption) => {
-        setStatusValidasiId(parseInt(selectedOption.value))
-        setStatusValidasi(selectedOption)
-        // console.log(statusValidasiId)
-    }
-  
-    const Validasi = async (e) => {
-        e.preventDefault();
-        setSpinner(true);
-        let date = (tahun+'-01-01');
-  
-        // getDataStatusValidasi()
-  
-        if(statusValidasiId == 3){
-            alert('Silahkan pilih status validasi terlebih dahulu')
-            setSpinner(false)
-        } else {
-            if(statusValidasiId == 2 && catatan == ""){
-                alert('Silahkan isi catatan apabila laporan tidak valid')
-                setSpinner(false)
-            } else if (idrs == "") {
-                alert('Silahkan pilih rumah sakit')
-                setSpinner(false)
-            } else {
-                try {
-                    const customConfig = {
-                        headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`,
-                        },
-                        params: {
-                        rsid: idrs,
-                        rlid: 12,
-                        tahun: date,
-                        },
-                    };
-                    const results = await axiosJWT.get(
-                        "/apisirsadmin/validasi",
-                        customConfig
-                    )
-        
-                    if(results.data.data == null){
-                        
-                    } else {
-                        setStatusDataValidasi(results.data.data.id)
-                    }
-                } catch (error) {
-                    console.log(error);
-                }
-  
-                if(statusDataValidasi == null){
-                    try {
-                        const customConfig = {
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${token}`
-                            }
-                        }
-                        const result = await axiosJWT.post('/apisirsadmin/validasi',{
-                            rsId: idrs,
-                            rlId: 12,
-                            tahun: date,
-                            statusValidasiId: statusValidasiId,
-                            catatan: catatan
-                        }, customConfig)
-                        // console.log(result.data)
-                        setSpinner(false)
-                        toast('Data Berhasil Disimpan', {
-                            position: toast.POSITION.TOP_RIGHT
-                        })
-                    } catch (error) {
-                        toast(`Data tidak bisa disimpan karena ,${error.response.data.message}`, {
-                            position: toast.POSITION.TOP_RIGHT
-                        })
-                        setSpinner(false)
-                    }
-                } else {
-                    try {
-                        const customConfig = {
-                                    headers: {
-                                        'Content-Type': 'application/json',
-                                        'Authorization': `Bearer ${token}`
-                                    }
-                                }
-                        await axiosJWT.patch('/apisirsadmin/validasi/' + statusDataValidasi, {
-                            statusValidasiId: statusValidasiId,
-                            catatan: catatan
-                        }, customConfig);
-                        setSpinner(false)
-                        toast('Data Berhasil Diupdate', {
-                            position: toast.POSITION.TOP_RIGHT
-                        })
-                    } catch (error) {
-                        console.log(error)
-                        toast('Data Gagal Diupdate', {
-                            position: toast.POSITION.TOP_RIGHT
-                        })
-                        setButtonStatus(false)
-                        setSpinner(false)
-                    }
-                }
-  
-                getDataStatusValidasi()
-            }
-        }
-    }
-  
-    const getDataStatusValidasi = async () => {
-        // e.preventDefault();
-        let date = (tahun+'-01-01');
-  
-        try {
-            const customConfig = {
-                headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-                },
-                params: {
-                rsid: idrs,
-                rlid: 12,
-                tahun: date,
-                },
-            };
-            const results = await axiosJWT.get(
-                "/apisirsadmin/validasi",
-                customConfig
-            )
-  
-            if(results.data.data == null){
-                setButtonStatus(false)
-                // setStatusDataValidasi()
-                setStatusValidasi({ value: 3, label: 'Belum divalidasi' })
-            } else {
-                setStatusValidasi({ value: results.data.data.status_validasi.id, label: results.data.data.status_validasi.nama })
-                setCatatan(results.data.data.catatan)
-                setButtonStatus(false)
-                setStatusDataValidasi(results.data.data.id)
-                // alert('hi')
-            }
-            // console.log(results)
-        } catch (error) {
-            console.log(error);
-        }
-        getDataStatusValidasi()
-    }
+      }
+  }
+
+  const getDataStatusValidasi = async () => {
+      // e.preventDefault();
+      let date = (tahun+'-01-01');
+
+      try {
+          const customConfig = {
+              headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+              },
+              params: {
+              rsid: idrs,
+              rlid: 12,
+              tahun: date,
+              },
+          };
+          const results = await axiosJWT.get(
+              "/apisirs/validasi",
+              customConfig
+          )
+
+          if(results.data.data == null){
+              setButtonStatus(false)
+              // setStatusDataValidasi()
+              setStatusValidasi({ value: 3, label: 'Belum divalidasi' })
+              setCatatan(' ')
+          } else {
+              setStatusValidasi({ value: results.data.data.status_validasi.id, label: results.data.data.status_validasi.nama })
+              setCatatan(results.data.data.catatan)
+              setButtonStatus(false)
+              setStatusDataValidasi(results.data.data.id)
+              // alert('hi')
+          }
+          // console.log(results)
+      } catch (error) {
+          console.log(error);
+      }
+  }
+
+  const changeValidateAccessEmpty = () => {
+      setValidateAccess(true)
+      setValidateVisibility("none")
+  }
   
    
   const Cari = async (e) => {
       e.preventDefault()
       setSpinner(true)
+      changeValidateAccess()
+      if(idrs !== ""){
       try {
           const customConfig = {
               headers: {
@@ -330,7 +353,7 @@ export const RL312 = () => {
                 tahun: tahun,
               }
           }
-          const results = await axiosJWT.get('/apisirsadmin/rltigatitikduabelas',
+          const results = await axiosJWT.get('/apisirs/rltigatitikduabelasadmin',
               customConfig)
           
           const rlTigaTitikDuaBelasDetails = results.data.data.map((value) => {
@@ -351,123 +374,149 @@ export const RL312 = () => {
           : 0
       );
 
+          if(!results.data.data.length){
+            changeValidateAccessEmpty()
+          }
           setDataRL(sortedProducts)
           setNamaFile("RL312_" + idrs);
           setSpinner(false)
           setNamaRS(results.data.dataRS.RUMAH_SAKIT);
-      } catch (error) {
-          console.log(error)
-      }
+          changeNamaTahun()
+          changeNamaKota()
+        } catch (error) {
+          toast("Get Data Error", {
+            position: toast.POSITION.TOP_RIGHT,
+          });
+          console.log(error);
+        }
+      } else {
+        toast('Filter tidak boleh kosong', {
+            position: toast.POSITION.TOP_RIGHT
+        })
+        changeValidateAccessEmpty()
+    }
+    setSpinner(false)
+getDataStatusValidasi()
   }
 
 
     return (
       <div className="container" style={{ marginTop: "70px" }}>
-        <div className="row">
-            <div className="col-md-6">
-                <div className="card">
-                    <div className="card-body">
-                        <h5 className="card-title h5">Validasi RL 3.12</h5>
-                        <form onSubmit={Validasi}>
-                        {/* <div className="form-floating" style={{width:"100%", display:"inline-block"}}> */}
-                            <Select
-                                options={optionStatusValidasi} className="form-control" name="status_validasi_id" id="status_validasi_id"
-                                onChange={changeHandlerStatusValidasi} value={statusValidasi}
-                            />
-                            {/* <label htmlFor="status_validasi_id">Status Validasi</label> */}
-                        {/* </div> */}
-                            <div className="form-floating" style={{width:"100%", display:"inline-block"}}>
-                                <input name="catatan" type="text" className="form-control" id="floatingInputCatatan" 
-                                    placeholder="catatan" value={catatan} onChange={e => changeHandlerCatatan(e)} />
-                                <label htmlFor="floatingInputCatatan">Catatan Tidak Diterima</label>
-                            </div>
-                            <div className="mt-3 mb-3">
-                                <ToastContainer />
-                                <button type="submit" disabled={buttonStatus} className="btn btn-outline-success"><HiSaveAs size={20}/> Simpan</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
+      <div className="row">
           <div className="col-md-6">
-            <div className="card">
+              <div className="card">
+                  <div className="card-body">
+                      <h5 className="card-title h5">Validasi RL 3.12</h5>
+                      <form onSubmit={Validasi}>
+                      {/* <div className="form-floating" style={{width:"100%", display:"inline-block"}}> */}
+                          <Select
+                              options={optionStatusValidasi} className="form-control" name="status_validasi_id" id="status_validasi_id"
+                              onChange={changeHandlerStatusValidasi} value={statusValidasi} isDisabled={validateAccess}
+                          />
+                          {/* <label htmlFor="status_validasi_id">Status Validasi</label> */}
+                      {/* </div> */}
+                          <div className="form-floating" style={{width:"100%", display:"inline-block"}}>
+                              <input name="catatan" type="text" className="form-control" id="floatingInputCatatan" disabled={validateAccess}
+                                  placeholder="catatan" value={catatan} onChange={e => changeHandlerCatatan(e)} />
+                              <label htmlFor="floatingInputCatatan">Catatan Tidak Diterima</label>
+                          </div>
+                          <div className="mt-3">
+                              <ToastContainer />
+                              <button type="submit" disabled={buttonStatus} style={{display: validateVisibility}} className="btn btn-outline-success"><HiSaveAs size={20}/> Simpan</button>
+                          </div>
+                      </form>
+                  </div>
+              </div>
+          </div>
+          <div className="col-md-6">
+          <div className="card">
               <div className="card-body">
-                <form onSubmit={Cari}>
+              <form onSubmit={Cari}>
                   <h5 className="card-title h5">
-                    Filter RL 3.12
+                  Filter RL 3.12
                   </h5>
                   <div
-                    className="form-floating"
-                    style={{ width: "100%", display: "inline-block" }}
+                  className="form-floating"
+                  style={{ width: "100%", display: "inline-block" }}
                   >
-                    <select
+                  <select
                       name="kabkota"
                       typeof="select"
                       className="form-control"
                       id="floatingselect"
                       placeholder="Kab/Kota"
                       onChange={searchRS}
-                    >
+                  >
                       {options.map((option) => {
-                        return (
-                          <option key={option.value} value={option.value}>
-                            {option.key}
+                      return (
+                          <option
+                          key={option.value}
+                          name={option.key}
+                          value={option.value}
+                          >
+                          {option.key}
                           </option>
-                        );
+                      );
                       })}
-                    </select>
-                    <label htmlFor="floatingInput">Kab. Kota :</label>
+                  </select>
+                  <label htmlFor="floatingInput">Kab. Kota :</label>
                   </div>
-  
-                  <div
-                    className="form-floating"
-                    style={{ width: "100%", display: "inline-block" }}
-                  >
-                    <select
-                      name="rumahsakit"
-                      typeof="select"
-                      className="form-control"
-                      id="floatingselect"
-                      placeholder="Rumah Sakit"
-                      onChange={(e) => changeHandlerRS(e)}
-                    >
-                      <option value="">Pilih Rumah Sakit</option>
-                      {optionsrs.map((option) => {
-                        return (
-                          <option key={option.value} value={option.value}>
-                            {option.key}
-                          </option>
-                        );
-                      })}
-                    </select>
-                    <label htmlFor="floatingInput">Rumah Sakit :</label>
+
+                  <div className="row">
+                      <div className="col-md-8">
+                          <div
+                          className="form-floating"
+                          style={{ width: "100%", display: "inline-block" }}
+                          >
+                          <select
+                              name="rumahsakit"
+                              typeof="select"
+                              className="form-control"
+                              id="floatingselect"
+                              placeholder="Rumah Sakit"
+                              onChange={(e) => changeHandlerRS(e)}
+                          >
+                              <option value="">Pilih Rumah Sakit</option>
+                              {optionsrs.map((option) => {
+                              return (
+                                  <option key={option.value} value={option.value}>
+                                  {option.key}
+                                  </option>
+                              );
+                              })}
+                          </select>
+                          <label htmlFor="floatingInput">Rumah Sakit :</label>
+                          </div>
+                      </div>
+                      <div className="col-md-4">
+                          <div
+                          className="form-floating"
+                          style={{ width: "100%", display: "inline-block" }}
+                          >
+                          <input
+                              name="tahun"
+                              type="number" min="2022"
+                              className="form-control"
+                              id="floatingInput"
+                              placeholder="Tahun" 
+                              value={tahun}
+                              onChange={(e) => changeHandlerSingle(e)}
+                          />
+                          <label htmlFor="floatingInput">Tahun</label>
+                          </div>
+                      </div>
                   </div>
-  
-                  <div
-                    className="form-floating"
-                    style={{ width: "100%", display: "inline-block" }}
-                  >
-                    <input
-                      name="tahun"
-                      type="text"
-                      className="form-control"
-                      id="floatingInput"
-                      placeholder="Tahun"
-                      value={tahun}
-                      onChange={(e) => changeHandlerSingle(e)}
-                    />
-                    <label htmlFor="floatingInput">Tahun</label>
-                  </div>
-                  <div className="mt-3 mb-3">
-                    <button type="submit" className="btn btn-outline-success">
+                  
+                  <div className="mt-3">
+                  <button type="submit" className="btn btn-outline-success">
                       <HiSaveAs /> Cari
-                    </button>
+                  </button>
                   </div>
-                </form>
+              </form>
               </div>
-            </div>
           </div>
-        </div>
+          </div>
+      </div>
     <div className="row mt-3 mb-3">
         <div className="col-md-12">
         
@@ -529,7 +578,7 @@ export const RL312 = () => {
                               <td>RL 3.12 </td>
                                   <td>{namaRS}</td>
                                   <td>{value.tahun}</td>
-                                  <td>{namakabkota}</td>
+                                  <td>{namakabkotaView}</td>
                                 <td>
                                     {value.metoda.nama}
                                 </td>

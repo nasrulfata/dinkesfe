@@ -1,26 +1,21 @@
 import React, { useState, useEffect , useRef} from "react";
 import axios from 'axios'
 import jwt_decode from 'jwt-decode'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import style from './FormTambahRL37.module.css'
 import { HiSaveAs } from 'react-icons/hi'
-import { RiDeleteBin5Fill, RiEdit2Fill } from 'react-icons/ri'
-import { AiFillFileAdd } from 'react-icons/ai'
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css'
-import { confirmAlert } from 'react-confirm-alert'
 import 'react-confirm-alert/src/react-confirm-alert.css'
 import Spinner from 'react-bootstrap/Spinner';
 import { DownloadTableExcel } from "react-export-table-to-excel";
-import { Typeahead } from 'react-bootstrap-typeahead';
 import Select from 'react-select'
 
 export const RL37 = () => {
   const [tahun, setTahun] = useState(new Date().getFullYear() - 1)
+  const [namaTahun, setNamaTahun] = useState(new Date().getFullYear() - 1);
   const [namaRS, setNamaRS] = useState('')
-  const [alamatRS, setAlamatRS] = useState('')
-  const [namaPropinsi, setNamaPropinsi] = useState('')
-  const [namaKabKota, setNamaKabKota] = useState('')
+
     const [token, setToken] = useState('')
     const [expire, setExpire] = useState('')
     const [dataRL, setDataRL] = useState([]);
@@ -33,12 +28,16 @@ export const RL37 = () => {
     const tableRef = useRef(null);
     const [namafile, setNamaFile] = useState("");
     const [namakabkota, setKabKota] = useState("");
+    const [namakabkotaView, setKabKotaView] = useState("");
     const [statusValidasi, setStatusValidasi] = useState({ value: 3, label: 'Belum divalidasi' })
     const [statusValidasiId, setStatusValidasiId] = useState(3)
     const [optionStatusValidasi, setOptionStatusValidasi] = useState([])
-    const [catatan, setCatatan] = useState("")
+    const [catatan, setCatatan] = useState(" ")
     const [buttonStatus, setButtonStatus] = useState(true)
     const [statusDataValidasi, setStatusDataValidasi] = useState()
+    const [validateAccess, setValidateAccess] = useState(true)
+    const [validateVisibility, setValidateVisibility] = useState("none")
+    const [kategoriUser, setKategoriUser] = useState(3)
     
 
     useEffect(() => {
@@ -50,41 +49,41 @@ export const RL37 = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const refreshToken = async() => {
+    const refreshToken = async () => {
       try {
-        const response = await axios.get("/apisirsadmin/token");
-        setToken(response.data.accessToken);
-        const decoded = jwt_decode(response.data.accessToken);
-        setExpire(decoded.exp);
-        // getDataRS(decoded.rsId);
+      const response = await axios.get("/apisirs/token");
+      setToken(response.data.accessToken);
+      const decoded = jwt_decode(response.data.accessToken);
+      setExpire(decoded.exp);
+      setKategoriUser(decoded.jenis_user_id);
       } catch (error) {
-        if (error.response) {
+      if (error.response) {
           navigate("/");
-        }
       }
-    };
+      }
+  };
 
-
-    const axiosJWT = axios.create();
-    axiosJWT.interceptors.request.use(
+  const axiosJWT = axios.create();
+  axiosJWT.interceptors.request.use(
       async (config) => {
-        const currentDate = new Date();
-        if (expire * 1000 < currentDate.getTime()) {
-          const response = await axios.get("/apisirsadmin/token");
+      const currentDate = new Date();
+      if (expire * 1000 < currentDate.getTime()) {
+          const response = await axios.get("/apisirs/token");
           config.headers.Authorization = `Bearer ${response.data.accessToken}`;
           setToken(response.data.accessToken);
           const decoded = jwt_decode(response.data.accessToken);
           setExpire(decoded.exp);
-        }
-        return config;
+      }
+      return config;
       },
       (error) => {
-        return Promise.reject(error);
+      return Promise.reject(error);
       }
-    );
-    const getDataKabkota = async () => {
+  );
+
+  const getDataKabkota = async () => {
       try {
-      const response = await axiosJWT.get("/apisirsadmin/kabkota");
+      const response = await axiosJWT.get("/apisirs/kabkota");
       const kabkotaDetails = response.data.data.map((value) => {
           return value;
       });
@@ -107,7 +106,7 @@ export const RL37 = () => {
 
   const getStatusValidasi = async () => {
       try {
-          const response = await axios.get("/apisirsadmin/statusvalidasi")
+          const response = await axios.get("/apisirs/statusvalidasi")
           const statusValidasiTemplate = response.data.data.map((value, index) => {
               return {
                   value: value.id,
@@ -122,11 +121,10 @@ export const RL37 = () => {
       // setStatusValidasi(3)
   }
 
-
   const searchRS = async (e) => {
       try {
       const responseRS = await axiosJWT.get(
-          "/apisirsadmin/rumahsakit/" + e.target.value,
+          "/apisirs/rumahsakit?kabkotaid=" + e.target.value,
           {
           headers: {
               Authorization: `Bearer ${token}`,
@@ -173,22 +171,40 @@ export const RL37 = () => {
       // console.log(statusValidasiId)
   }
 
+  const changeNamaTahun = () => {
+      setNamaTahun(tahun)
+  }
+  
+  const changeNamaKota = () => {
+    setKabKotaView(namakabkota)
+}
+  const changeValidateAccess = () => {
+      console.log(kategoriUser)
+      if(kategoriUser === 2) {
+          setValidateAccess(true)
+          setValidateVisibility("none")
+      } else if(kategoriUser === 3) {
+          setValidateAccess(false)
+          setValidateVisibility("block")
+      }
+      console.log(validateAccess)
+  }
+
   const Validasi = async (e) => {
       e.preventDefault();
-      console.log(e)
       setSpinner(true);
       let date = (tahun+'-01-01');
 
       // getDataStatusValidasi()
 
-      if(statusValidasiId == 3){
+      if(statusValidasiId === 3){
           alert('Silahkan pilih status validasi terlebih dahulu')
           setSpinner(false)
       } else {
-          if(statusValidasiId == 2 && catatan == ""){
+          if(statusValidasiId === 2 && catatan === ""){
               alert('Silahkan isi catatan apabila laporan tidak valid')
               setSpinner(false)
-          } else if (idrs == "") {
+          } else if (idrs === "") {
               alert('Silahkan pilih rumah sakit')
               setSpinner(false)
           } else {
@@ -205,7 +221,7 @@ export const RL37 = () => {
                       },
                   };
                   const results = await axiosJWT.get(
-                      "/apisirsadmin/validasi",
+                      "/apisirs/validasi",
                       customConfig
                   )
       
@@ -226,7 +242,7 @@ export const RL37 = () => {
                               'Authorization': `Bearer ${token}`
                           }
                       }
-                      const result = await axiosJWT.post('/apisirsadmin/validasi',{
+                      await axiosJWT.post('/apisirs/validasi',{
                           rsId: idrs,
                           rlId: 7,
                           tahun: date,
@@ -252,7 +268,7 @@ export const RL37 = () => {
                                       'Authorization': `Bearer ${token}`
                                   }
                               }
-                      await axiosJWT.patch('/apisirsadmin/validasi/' + statusDataValidasi, {
+                      await axiosJWT.patch('/apisirs/validasi/' + statusDataValidasi, {
                           statusValidasiId: statusValidasiId,
                           catatan: catatan
                       }, customConfig);
@@ -292,7 +308,7 @@ export const RL37 = () => {
               },
           };
           const results = await axiosJWT.get(
-              "/apisirsadmin/validasi",
+              "/apisirs/validasi",
               customConfig
           )
 
@@ -300,6 +316,7 @@ export const RL37 = () => {
               setButtonStatus(false)
               // setStatusDataValidasi()
               setStatusValidasi({ value: 3, label: 'Belum divalidasi' })
+              setCatatan(' ')
           } else {
               setStatusValidasi({ value: results.data.data.status_validasi.id, label: results.data.data.status_validasi.nama })
               setCatatan(results.data.data.catatan)
@@ -313,9 +330,15 @@ export const RL37 = () => {
       }
   }
 
+  const changeValidateAccessEmpty = () => {
+      setValidateAccess(true)
+      setValidateVisibility("none")
+  }
     const Cari = async (e) => {
       e.preventDefault()
       setSpinner(true)
+      changeValidateAccess()
+      if(idrs !== ""){
       try {
           const customConfig = {
               headers: {
@@ -329,7 +352,7 @@ export const RL37 = () => {
               },
               
           }
-          const results = await axiosJWT.get('/apisirsadmin/rltigatitiktujuh',
+          const results = await axiosJWT.get('/apisirs/rltigatitiktujuhadmin',
               customConfig)
           
 
@@ -389,10 +412,15 @@ let groups = [];
           });
         }
       });
+      if(!results.data.data.length){
+        changeValidateAccessEmpty()
+    }
       setDataRL(data);
       setNamaFile("RL37_" + idrs);
       setSpinner(false)
       setNamaRS(results.data.dataRS.RUMAH_SAKIT);
+      changeNamaTahun()
+      changeNamaKota()
       // getDataValidasi();
     } catch (error) {
       toast("Get Data Error", {
@@ -400,7 +428,15 @@ let groups = [];
       });
       console.log(error);
     }
-    getDataStatusValidasi()
+  } else {
+    toast('Filter tidak boleh kosong', {
+        position: toast.POSITION.TOP_RIGHT
+    })
+    changeValidateAccessEmpty()
+}
+
+setSpinner(false)
+getDataStatusValidasi()
   }
 
     return (
@@ -414,102 +450,112 @@ let groups = [];
                         {/* <div className="form-floating" style={{width:"100%", display:"inline-block"}}> */}
                             <Select
                                 options={optionStatusValidasi} className="form-control" name="status_validasi_id" id="status_validasi_id"
-                                onChange={changeHandlerStatusValidasi} value={statusValidasi}
+                                onChange={changeHandlerStatusValidasi} value={statusValidasi} isDisabled={validateAccess}
                             />
                             {/* <label htmlFor="status_validasi_id">Status Validasi</label> */}
                         {/* </div> */}
                             <div className="form-floating" style={{width:"100%", display:"inline-block"}}>
-                                <input name="catatan" type="text" className="form-control" id="floatingInputCatatan" 
+                                <input name="catatan" type="text" className="form-control" id="floatingInputCatatan" disabled={validateAccess}
                                     placeholder="catatan" value={catatan} onChange={e => changeHandlerCatatan(e)} />
                                 <label htmlFor="floatingInputCatatan">Catatan Tidak Diterima</label>
                             </div>
-                            <div className="mt-3 mb-3">
+                            <div className="mt-3">
                                 <ToastContainer />
-                                <button type="submit" disabled={buttonStatus} className="btn btn-outline-success"><HiSaveAs size={20}/> Simpan</button>
+                                <button type="submit" disabled={buttonStatus} style={{display: validateVisibility}} className="btn btn-outline-success"><HiSaveAs size={20}/> Simpan</button>
                             </div>
                         </form>
                     </div>
                 </div>
             </div>
-        <div className="col-md-6">
-          <div className="card">
-            <div className="card-body">
-              <form onSubmit={Cari}>
-                <h5 className="card-title h5">
-                  Filter RL 3.7
-                </h5>
-                <div
-                  className="form-floating"
-                  style={{ width: "100%", display: "inline-block" }}
-                >
-                  <select
-                    name="kabkota"
-                    typeof="select"
-                    className="form-control"
-                    id="floatingselect"
-                    placeholder="Kab/Kota"
-                    onChange={searchRS}
-                  >
-                    {options.map((option) => {
-                      return (
-                        <option key={option.value} value={option.value}>
-                          {option.key}
-                        </option>
-                      );
-                    })}
-                  </select>
-                  <label htmlFor="floatingInput">Kab. Kota :</label>
-                </div>
+            <div className="col-md-6">
+            <div className="card">
+                <div className="card-body">
+                <form onSubmit={Cari}>
+                    <h5 className="card-title h5">
+                    Filter RL 3.7
+                    </h5>
+                    <div
+                    className="form-floating"
+                    style={{ width: "100%", display: "inline-block" }}
+                    >
+                    <select
+                        name="kabkota"
+                        typeof="select"
+                        className="form-control"
+                        id="floatingselect"
+                        placeholder="Kab/Kota"
+                        onChange={searchRS}
+                    >
+                        {options.map((option) => {
+                        return (
+                            <option
+                            key={option.value}
+                            name={option.key}
+                            value={option.value}
+                            >
+                            {option.key}
+                            </option>
+                        );
+                        })}
+                    </select>
+                    <label htmlFor="floatingInput">Kab. Kota :</label>
+                    </div>
 
-                <div
-                  className="form-floating"
-                  style={{ width: "100%", display: "inline-block" }}
-                >
-                  <select
-                    name="rumahsakit"
-                    typeof="select"
-                    className="form-control"
-                    id="floatingselect"
-                    placeholder="Rumah Sakit"
-                    onChange={(e) => changeHandlerRS(e)}
-                  >
-                    <option value="">Pilih Rumah Sakit</option>
-                    {optionsrs.map((option) => {
-                      return (
-                        <option key={option.value} value={option.value}>
-                          {option.key}
-                        </option>
-                      );
-                    })}
-                  </select>
-                  <label htmlFor="floatingInput">Rumah Sakit :</label>
+                    <div className="row">
+                        <div className="col-md-8">
+                            <div
+                            className="form-floating"
+                            style={{ width: "100%", display: "inline-block" }}
+                            >
+                            <select
+                                name="rumahsakit"
+                                typeof="select"
+                                className="form-control"
+                                id="floatingselect"
+                                placeholder="Rumah Sakit"
+                                onChange={(e) => changeHandlerRS(e)}
+                            >
+                                <option value="">Pilih Rumah Sakit</option>
+                                {optionsrs.map((option) => {
+                                return (
+                                    <option key={option.value} value={option.value}>
+                                    {option.key}
+                                    </option>
+                                );
+                                })}
+                            </select>
+                            <label htmlFor="floatingInput">Rumah Sakit :</label>
+                            </div>
+                        </div>
+                        <div className="col-md-4">
+                            <div
+                            className="form-floating"
+                            style={{ width: "100%", display: "inline-block" }}
+                            >
+                            <input
+                                name="tahun"
+                                type="number" min="2022"
+                                className="form-control"
+                                id="floatingInput"
+                                placeholder="Tahun" 
+                                value={tahun}
+                                onChange={(e) => changeHandlerSingle(e)}
+                            />
+                            <label htmlFor="floatingInput">Tahun</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div className="mt-3">
+                    <button type="submit" className="btn btn-outline-success">
+                        <HiSaveAs /> Cari
+                    </button>
+                    </div>
+                </form>
                 </div>
-
-                <div
-                  className="form-floating"
-                  style={{ width: "100%", display: "inline-block" }}
-                >
-                  <input
-                    name="tahun"
-                    type="text"
-                    className="form-control"
-                    id="floatingInput"
-                    placeholder="Tahun"
-                    value={tahun}
-                    onChange={(e) => changeHandlerSingle(e)}
-                  />
-                  <label htmlFor="floatingInput">Tahun</label>
-                </div>
-                <div className="mt-3 mb-3">
-                  <button type="submit" className="btn btn-outline-success">
-                    <HiSaveAs /> Cari
-                  </button>
-                </div>
-              </form>
             </div>
-          </div>
-        </div>
-      </div>            
+            </div>
+        </div>         
         <div className="row mt-3 mb-3">
             <div className="col-md-12">
               <div className="container" style={{ textAlign: "center" }}>
@@ -574,7 +620,7 @@ let groups = [];
                               <td>RL 3.7 </td>
                               <td>{namaRS}</td>
                               <td>{value2.tahun}</td>
-                              <td>{namakabkota}</td>
+                              <td>{namakabkotaView}</td>
                               
                               {/* <td>
                                 <ToastContainer />
