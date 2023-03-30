@@ -62,16 +62,16 @@ const NavigationBar = () => {
                             <NavDropdown.Item as={Link} to="/rl35">
                                 RL 3.5 Perinotologi
                             </NavDropdown.Item>
-                            <NavDropdown.Item as={Link} to="/admin/rl36">
+                            <NavDropdown.Item as={Link} to="/sirsadmin/rl36">
                                 RL 3.6 Pembedahan
                             </NavDropdown.Item>
-                            <NavDropdown.Item as={Link} to="/admin/rl37">
+                            <NavDropdown.Item as={Link} to="/sirsadmin/rl37">
                                 RL 3.7 Radiologi
                             </NavDropdown.Item>
                             <NavDropdown.Item as={Link} to="/rl38">
                                 RL 3.8 Laboratorium
                             </NavDropdown.Item>
-                            <NavDropdown.Item as={Link} to="/admin/rl39">
+                            <NavDropdown.Item as={Link} to="/sirsadmin/rl39">
                                 RL 3.9 Rehabilitasi Medik
                             </NavDropdown.Item>
                             <NavDropdown.Item as={Link} to="/rl310">
@@ -80,13 +80,13 @@ const NavigationBar = () => {
                             <NavDropdown.Item as={Link} to="/rl311">
                                 RL 3.11 Kesehatan Jiwa
                             </NavDropdown.Item>
-                            <NavDropdown.Item as={Link} to="/admin/rl312">
+                            <NavDropdown.Item as={Link} to="/sirsadmin/rl312">
                                 RL 3.12 Keluarga Berencana
                             </NavDropdown.Item>
-                            <NavDropdown.Item as={Link} to="/admin/rl313A">
+                            <NavDropdown.Item as={Link} to="/sirsadmin/rl313A">
                                 RL 3.13A Farmasi Obat Pengadaan
                             </NavDropdown.Item>
-                            <NavDropdown.Item as={Link} to="/admin/rl313B">
+                            <NavDropdown.Item as={Link} to="/sirsadmin/rl313B">
                                 RL 3.13B Farmasi Obat Pelayanan Resep
                             </NavDropdown.Item>
                             <NavDropdown.Item as={Link} to="/rl314">
