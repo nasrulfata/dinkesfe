@@ -11,6 +11,8 @@ import Table from 'react-bootstrap/Table';
 import Spinner from "react-bootstrap/esm/Spinner";
 import { DownloadTableExcel } from "react-export-table-to-excel";
 import Select from 'react-select'
+import FloatingLabel from "react-bootstrap/FloatingLabel";
+import Form from "react-bootstrap/Form";
 
 export const RL312 = () => {
   const [tahun, setTahun] = useState('2022')
@@ -38,6 +40,7 @@ export const RL312 = () => {
     const [validateAccess, setValidateAccess] = useState(true)
     const [validateVisibility, setValidateVisibility] = useState("none")
     const [kategoriUser, setKategoriUser] = useState(3)
+    const [Buttonsearch, setButtonsearch] = useState(true);
 
     
 
@@ -163,8 +166,15 @@ export const RL312 = () => {
   };
 
   const changeHandlerRS = (event) => {
-      setIdRS(event.target.value);
-  }
+    setButtonStatus(true);
+    setCatatan(" ");
+    setStatusValidasi({
+      value: 3,
+      label: "Belum divalidasi",
+    });
+    setIdRS(event.target.value);
+    setButtonsearch(false);
+  };
 
   const changeHandlerStatusValidasi = (selectedOption) => {
       setStatusValidasiId(parseInt(selectedOption.value))
@@ -416,9 +426,18 @@ getDataStatusValidasi()
                           {/* <label htmlFor="status_validasi_id">Status Validasi</label> */}
                       {/* </div> */}
                           <div className="form-floating" style={{width:"100%", display:"inline-block"}}>
-                              <input name="catatan" type="text" className="form-control" id="floatingInputCatatan" disabled={validateAccess}
-                                  placeholder="catatan" value={catatan} onChange={e => changeHandlerCatatan(e)} />
-                              <label htmlFor="floatingInputCatatan">Catatan Tidak Diterima</label>
+                          <FloatingLabel label="Catatan :">
+                  <Form.Control
+                    as="textarea"
+                    name="catatan"
+                    placeholder="Leave a comment here"
+                    id="floatingInputCatatan"
+                    style={{ height: "100px" }}
+                    disabled={buttonStatus}
+                    value={catatan}
+                    onChange={(e) => changeHandlerCatatan(e)}
+                  />
+                </FloatingLabel>
                           </div>
                           <div className="mt-3">
                               <ToastContainer />

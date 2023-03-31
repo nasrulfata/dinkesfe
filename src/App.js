@@ -31,22 +31,22 @@ function App() {
     <BrowserRouter basename={''}>
       <Routes>
         <Route path="/" element={<Login/>} />
-        <Route path="admin/beranda" element={<><NavigationBar/></>} />
+        <Route path="sirsadmin/beranda" element={<><NavigationBar/></>} />
         <Route path="/user/ubahpassword" element={<><NavigationBar/><FormUbahPassword/></>}/>
 
 
-        <Route path="admin/rl37" element={<><NavigationBar/><RL37/></>}/>
+        <Route path="sirsadmin/rl37" element={<><NavigationBar/><RL37/></>}/>
 
 
-        <Route path="admin/rl312" element={<><NavigationBar/><RL312/></>}/>
+        <Route path="sirsadmin/rl312" element={<><NavigationBar/><RL312/></>}/>
 
 
-        <Route path="admin/rl313A" element={<><NavigationBar/><RL313A/></>}/>
+        <Route path="sirsadmin/rl313A" element={<><NavigationBar/><RL313A/></>}/>
 
-        <Route path="admin/rl313B" element={<><NavigationBar/><RL313B/></>}/>
+        <Route path="sirsadmin/rl313B" element={<><NavigationBar/><RL313B/></>}/>
 
 
-        <Route path="admin/rl54" element={<><NavigationBar/><RL54/></>}/>
+        <Route path="sirsadmin/rl54" element={<><NavigationBar/><RL54/></>}/>
 
       </Routes>
     </BrowserRouter>
