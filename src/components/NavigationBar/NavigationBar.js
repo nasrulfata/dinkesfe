@@ -120,7 +120,7 @@ const NavigationBar = () => {
                             <NavDropdown.Item as={Link} to="/rl53">
                                 RL 5.3 Daftar 10 Besar Penyakit Rawat Inap
                             </NavDropdown.Item>
-                            <NavDropdown.Item as={Link} to="/admin/rl54">
+                            <NavDropdown.Item as={Link} to="/sirsadmin/rl54">
                                 RL 5.4 Daftar 10 Besar Penyakit Rawat Jalan
                             </NavDropdown.Item>
                         </NavDropdown>
