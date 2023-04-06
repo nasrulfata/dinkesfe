@@ -40,10 +40,10 @@ export const RL54 = () => {
     const [catatan, setCatatan] = useState(" ")
     const [buttonStatus, setButtonStatus] = useState(true)
     const [statusDataValidasi, setStatusDataValidasi] = useState()
-    const [validateAccess, setValidateAccess] = useState(true)
-    const [validateVisibility, setValidateVisibility] = useState("none")
+    // const [validateAccess, setValidateAccess] = useState(true)
+    // const [validateVisibility, setValidateVisibility] = useState("none")
     const [kategoriUser, setKategoriUser] = useState(3)
-    const [namakabkotaView, setKabKotaView] = useState("");
+    // const [namakabkotaView, setKabKotaView] = useState("");
     const [Buttonsearch, setButtonsearch] = useState(true);
     const [statusRecordValidasi, setStatusRecordValidasi] = useState("post")
     const [validasiId, setValidasiId] = useState(null)
@@ -242,9 +242,9 @@ export const RL54 = () => {
         setButtonsearch(false);
       };
 
-    const changeNamaKota = () => {
-        setKabKotaView(namakabkota)
-    }
+    // const changeNamaKota = () => {
+    //     setKabKotaView(namakabkota)
+    // }
 
     const changeHandlerStatusValidasi = (selectedOption) => {
         setStatusValidasiId(parseInt(selectedOption.value))
@@ -252,17 +252,17 @@ export const RL54 = () => {
         // console.log(statusValidasiId)
     }
 
-    const changeValidateAccess = () => {
-        console.log(kategoriUser)
-        if(kategoriUser === 2) {
-            setValidateAccess(true)
-            setValidateVisibility("none")
-        } else if(kategoriUser === 3) {
-            setValidateAccess(false)
-            setValidateVisibility("block")
-        }
-        console.log(validateAccess)
-    }
+    // const changeValidateAccess = () => {
+    //     console.log(kategoriUser)
+    //     if(kategoriUser === 2) {
+    //         setValidateAccess(true)
+    //         setValidateVisibility("none")
+    //     } else if(kategoriUser === 3) {
+    //         setValidateAccess(false)
+    //         setValidateVisibility("block")
+    //     }
+    //     console.log(validateAccess)
+    // }
 
     const Validasi = async (e) => {
         e.preventDefault();
@@ -377,10 +377,10 @@ export const RL54 = () => {
           }
         };
 
-    const changeValidateAccessEmpty = () => {
-        setValidateAccess(true)
-        setValidateVisibility("none")
-    }
+    // const changeValidateAccessEmpty = () => {
+    //     setValidateAccess(true)
+    //     setValidateVisibility("none")
+    // }
 
   const Cari = async (e) => {
     let date = (tahun+'-'+bulan+'-01')

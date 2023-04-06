@@ -32,15 +32,15 @@ export const RL313A = () => {
   const [namafile, setNamaFile] = useState("");
   // const [namaRS, setNamaRS] = useState("");
   const [namakabkota, setKabKota] = useState("");
-  const [namakabkotaView, setKabKotaView] = useState("");
+  // const [namakabkotaView, setKabKotaView] = useState("");
   const [statusValidasi, setStatusValidasi] = useState({ value: 3, label: 'Belum divalidasi' })
   const [statusValidasiId, setStatusValidasiId] = useState(3)
   const [optionStatusValidasi, setOptionStatusValidasi] = useState([])
   const [catatan, setCatatan] = useState(" ")
   const [buttonStatus, setButtonStatus] = useState(true)
   const [statusDataValidasi, setStatusDataValidasi] = useState()
-  const [validateAccess, setValidateAccess] = useState(true)
-  const [validateVisibility, setValidateVisibility] = useState("none")
+  // const [validateAccess, setValidateAccess] = useState(true)
+  // const [validateVisibility, setValidateVisibility] = useState("none")
   const [kategoriUser, setKategoriUser] = useState(3)
   const [Buttonsearch, setButtonsearch] = useState(true);
   const [statusRecordValidasi, setStatusRecordValidasi] = useState("post")
@@ -201,21 +201,21 @@ export const RL313A = () => {
       setNamaTahun(tahun)
   }
 
-  const changeNamaKota = () => {
-    setKabKotaView(namakabkota)
-  }
+  // const changeNamaKota = () => {
+  //   setKabKotaView(namakabkota)
+  // }
 
-  const changeValidateAccess = () => {
-      console.log(kategoriUser)
-      if(kategoriUser === 2) {
-          setValidateAccess(true)
-          setValidateVisibility("none")
-      } else if(kategoriUser === 3) {
-          setValidateAccess(false)
-          setValidateVisibility("block")
-      }
-      console.log(validateAccess)
-  }
+  // const changeValidateAccess = () => {
+  //     console.log(kategoriUser)
+  //     if(kategoriUser === 2) {
+  //         setValidateAccess(true)
+  //         setValidateVisibility("none")
+  //     } else if(kategoriUser === 3) {
+  //         setValidateAccess(false)
+  //         setValidateVisibility("block")
+  //     }
+  //     console.log(validateAccess)
+  // }
 
   const Validasi = async (e) => {
     e.preventDefault();
@@ -327,10 +327,10 @@ export const RL313A = () => {
     }
   };
 
-  const changeValidateAccessEmpty = () => {
-      setValidateAccess(true)
-      setValidateVisibility("none")
-  }
+  // const changeValidateAccessEmpty = () => {
+  //     setValidateAccess(true)
+  //     setValidateVisibility("none")
+  // }
 
   const Cari = async (e) => {
       e.preventDefault()
